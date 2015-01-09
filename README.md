@@ -36,7 +36,7 @@ Inoltre in questo modo è possibile avere i dati sulla posizione nel tempo e qui
 * creazione HW dedicato
 * creazione database condiviso dei tracciati internazionali da usare con il laptimer
 * contamarce
-* creaazione automatica tracciato se non impostato
+* creazione automatica tracciato se non impostato
 
 ###Dispositivi utilizzati
 * Arduino DUE (DUE R3-E) (http://arduino.cc/en/Main/ArduinoBoardDue)
