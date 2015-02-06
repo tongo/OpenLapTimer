@@ -9,6 +9,7 @@
 #include "MyAdafruit_ILI9341.h"
 
 // For the Adafruit shield, these are the default.
+#define TFT_RST 8
 #define TFT_DC 9
 #define TFT_CS 10
 
@@ -19,7 +20,7 @@ int prevTestButtonState = 0;
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
 //Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
-MyAdafruit_ILI9341 tft = MyAdafruit_ILI9341(TFT_CS, TFT_DC);
+MyAdafruit_ILI9341 tft = MyAdafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 // SD-Card
 #define SD_CS 4
