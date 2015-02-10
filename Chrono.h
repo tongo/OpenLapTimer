@@ -11,14 +11,15 @@
 #include "Track.h"
 #include "GpsPoint.h"
 #include "SD.h"
-#include "MyAdafruit_ILI9341.h"
+//#include "MyAdafruit_ILI9341.h"
+ #include <ILI9341_due.h>
 
 #ifndef CHRONO_H_
 #define CHRONO_H_
 
 class Chrono {
 public:
-	Chrono(MyAdafruit_ILI9341* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial);
+	Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial);
 	virtual ~Chrono();
 	void loopChrono(void);
 	void setLogSdCard(bool useSdCard);

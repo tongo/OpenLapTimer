@@ -8,8 +8,8 @@
 #include "Chrono.h"
 #define DEBUG_LOG_SETUP false
 #define DEBUG_LOG false
-  
-Chrono::Chrono(MyAdafruit_ILI9341* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial) {
+
+Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial) {
 	lcdTft->begin();
 	#if DEBUG_LOG_SETUP
 	Serial.println("LCD init finish");

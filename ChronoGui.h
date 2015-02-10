@@ -5,18 +5,25 @@
  *      Author: Tongo
  */
 
-#include "MyAdafruit_ILI9341.h"
+//#include "MyAdafruit_ILI9341.h"
+#include <ILI_SdSpi.h>
+#include <ILI_SdFatConfig.h>
+#include <ILI9341_due_gText.h>
+#include <ILI9341_due.h>
 
+#include "fonts/Arial_bold_14.h"
+ 
 class ChronoGui {
 public:
 	ChronoGui();
-	void initTft(MyAdafruit_ILI9341* tft);
+	void initTft(ILI9341_due* tft);
 	void updateLapTime(long lapTime);
 	void updateLapNumber(int lapCount);
 	void updateGpsFixState(bool gpsState);
 	void updateGpsSatelliteNumber(int8_t satelliteNumber);
 	void updateGearCounter(uint8_t gear);
 private:
-	MyAdafruit_ILI9341* tft;
+	ILI9341_due* tft;
+	ILI9341_due_gText * timeTextBox;
 };
 

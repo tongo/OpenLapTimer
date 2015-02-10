@@ -11,15 +11,31 @@
 
 ChronoGui::ChronoGui() {
 	this->tft = NULL;
+	this->timeTextBox = NULL;
 }
 
-void ChronoGui::initTft(MyAdafruit_ILI9341* tft) {
+void ChronoGui::initTft(ILI9341_due* tft) {
+	Serial.println("ChronoGui INIT - START");
 	this->tft = tft;
-	this->tft->setRotation(3); // Landscape right
+	this->tft->setRotation(iliRotation270);
+	//this->tft->setRotation(3); // Landscape right
 	this->tft->fillScreen(ILI9341_BLACK);
+
+	// Time text box initilization
+	
+	this->timeTextBox = new ILI9341_due_gText(this->tft);
+	this->timeTextBox->defineArea(4, 104, 220, 130);
+	this->timeTextBox->selectFont(Arial_bold_14);
+	this->timeTextBox->setFontLetterSpacing(5);
+	this->timeTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
+	this->timeTextBox->drawString("ii:ii:ii", gTextAlignMiddleCenter);
+
+	Serial.println("ChronoGui INIT - FINISH");
 }
 
 void ChronoGui::updateLapTime(long lapTime) {
+	Serial.println("UPDATE TIMER - START");
+	/*
 	uint8_t mins = 0;
 	uint8_t secs = 0;
 	uint16_t cents = 0;
@@ -41,15 +57,25 @@ void ChronoGui::updateLapTime(long lapTime) {
 	this->tft->print(secs);
 	this->tft->print("\"");
 	this->tft->print(cents);
+*/
+	this->timeTextBox = new ILI9341_due_gText(this->tft);
+	this->timeTextBox->defineArea(4, 104, 220, 130);
+	this->timeTextBox->selectFont(Arial_bold_14);
+	this->timeTextBox->setFontLetterSpacing(5);
+	this->timeTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
+	this->timeTextBox->drawString("xx:xx:xx", gTextAlignMiddleCenter);
+	Serial.println("UPDATE TIMER - FINISH");
 }
 
 void ChronoGui::updateLapNumber(int lapCount) {
+	/*
 	this->tft->setCursor(10, 206);
 	this->tft->setFont(mainFont);
 	this->tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
 	this->tft->setTextSize(1);
 	this->tft->print(lapCount);
 	this->tft->print(" lap");
+	*/
 }
 
 void ChronoGui::updateGpsFixState(bool gpsState) {
@@ -62,6 +88,7 @@ void ChronoGui::updateGpsFixState(bool gpsState) {
 }
 
 void ChronoGui::updateGpsSatelliteNumber(int8_t satelliteNumber) {
+	/*
 	this->tft->setCursor(93, 8);
 	this->tft->setFont(mainFont);
 	this->tft->setTextColor(ILI9341_WHITE, ILI9341_BLACK);
@@ -72,6 +99,7 @@ void ChronoGui::updateGpsSatelliteNumber(int8_t satelliteNumber) {
 	} else {
 		this->tft->print("--");
 	}
+	*/
 }
 
 void ChronoGui::updateGearCounter(uint8_t gear) {
