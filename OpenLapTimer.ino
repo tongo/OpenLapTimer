@@ -20,14 +20,14 @@ int prevTestButtonState = 0;
 // Use hardware SPI (on Uno, #13, #12, #11) and the above for CS/DC
 //Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
-MyAdafruit_ILI9341 tft = MyAdafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+MyAdafruit_ILI9341* tft = new MyAdafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 // SD-Card
 #define SD_CS 4
 
 // GPS
 #define gpsSerial Serial1
-Adafruit_GPS GPS(&gpsSerial);
+Adafruit_GPS* gps = new Adafruit_GPS(&gpsSerial);
 
 Chrono* chrono;
 
@@ -37,7 +37,7 @@ void setup() {
   pinMode(FINISH_LINE_BUTTON, INPUT);
   
   Serial.println("Chrono setup");
-  chrono = new Chrono(&tft, &GPS, &gpsSerial);
+  chrono = new Chrono(tft, gps, &gpsSerial);
   Serial.println("Chrono setup finish");
   
   // SD-Card
