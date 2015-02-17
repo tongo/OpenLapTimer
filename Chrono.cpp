@@ -156,6 +156,7 @@ void Chrono::loopChrono(void) {
 
 			// SD-Card logging (only on new Position change)
 			if(useSdCard) {
+				/*
 				File dataFile = SD.open("track.txt", FILE_WRITE);
 				if (dataFile) {
 					dataFile.print(gps->day);
@@ -199,6 +200,7 @@ void Chrono::loopChrono(void) {
 					dataFile.println("");
 					dataFile.close();
 				}
+				*/
 			}
 		}
 

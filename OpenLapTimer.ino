@@ -5,10 +5,10 @@
 #include <ILI9341_due_gText.h>
 #include <ILI9341_due.h>
 
-#include "fonts/Arial_bold_14.h"
+//#include "fonts/Arial_bold_14.h"
 
-#include "SPI.h"
-#include "SD.h"
+//#include "SPI.h"
+//#include "SD.h"
 //#include "Adafruit_GFX.h"
 //#include "Adafruit_ILI9341.h"
 #include "Adafruit_GPS.h"
@@ -31,7 +31,7 @@ int prevTestButtonState = 0;
 ILI9341_due* tft = new ILI9341_due(TFT_CS, TFT_DC, TFT_RST);
 
 // SD-Card
-#define SD_CS 4
+//#define SD_CS 4
 
 // GPS
 #define gpsSerial Serial1
@@ -48,12 +48,14 @@ void setup() {
   chrono = new Chrono(tft, gps, &gpsSerial);
   Serial.println("Chrono setup finish");
   
+  /*
   // SD-Card
   if (SD.begin(SD_CS)) {
     chrono->setLogSdCard(true);
   } else {
     Serial.println("SD-Card not initialized");
   }
+  */
   
   Serial.println("FINE SETUP LapTimer!");
 }

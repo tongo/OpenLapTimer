@@ -10,8 +10,6 @@
 #include <ILI_SdFatConfig.h>
 #include <ILI9341_due_gText.h>
 #include <ILI9341_due.h>
-
-#include "fonts/Arial_bold_14.h"
  
 class ChronoGui {
 public:
@@ -25,5 +23,7 @@ public:
 private:
 	ILI9341_due* tft;
 	ILI9341_due_gText * timeTextBox;
+	ILI9341_due_gText * gpsSatTextBox;
+	ILI9341_due_gText * lapCountTextBox;
 };
 
