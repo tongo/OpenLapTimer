@@ -8,8 +8,8 @@
 #include "Chrono.h"
 #define DEBUG_LOG_SETUP false
 #define DEBUG_LOG false
-  
-Chrono::Chrono(MyAdafruit_ILI9341* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial) {
+
+Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial) {
 	lcdTft->begin();
 	#if DEBUG_LOG_SETUP
 	Serial.println("LCD init finish");
@@ -156,6 +156,7 @@ void Chrono::loopChrono(void) {
 
 			// SD-Card logging (only on new Position change)
 			if(useSdCard) {
+				/*
 				File dataFile = SD.open("track.txt", FILE_WRITE);
 				if (dataFile) {
 					dataFile.print(gps->day);
@@ -199,6 +200,7 @@ void Chrono::loopChrono(void) {
 					dataFile.println("");
 					dataFile.close();
 				}
+				*/
 			}
 		}
 
