@@ -44,6 +44,11 @@
 #define LAP_COUNT_TEXTBOX_COL 76
 #define LAP_COUNT_TEXTBOX_ROW 236
 
+#define LAP_TIME_TEXTBOX_X 24
+#define LAP_TIME_TEXTBOX_Y 104
+#define LAP_TIME_TEXTBOX_COL 220
+#define LAP_TIME_TEXTBOX_ROW 1
+
 ChronoGui::ChronoGui() {
 	this->tft = NULL;
 	this->timeTextBox = NULL;
@@ -73,7 +78,7 @@ void ChronoGui::initTft(ILI9341_due* tft) {
 
 	// Time text box initilization
 	this->timeTextBox = new ILI9341_due_gText(this->tft);
-	this->timeTextBox->defineArea(4, 104, 220, 1);
+	this->timeTextBox->defineArea(LAP_TIME_TEXTBOX_X, LAP_TIME_TEXTBOX_Y, LAP_TIME_TEXTBOX_COL, LAP_TIME_TEXTBOX_ROW);
 	this->timeTextBox->selectFont(lapTimeFont);
 	//this->timeTextBox->selectFont(Arial_bold_14);
 	this->timeTextBox->setFontLetterSpacing(5);
