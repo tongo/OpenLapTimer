@@ -12,7 +12,6 @@ public:
 
 	float latitude;
 	float longitude;
-
 private:
 	double convertDegMinToDecDeg(float deg);
 };

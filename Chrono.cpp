@@ -47,12 +47,12 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 
 	//gps->sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
 	//GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-    gps->sendCommand(PMTK_SET_NMEA_OUTPUT_ALLDATA);
+	gps->sendCommand(PMTK_SET_NMEA_OUTPUT_ALLDATA);
 	// NMEA in Output frequency
 	#if DEBUG_LOG_SETUP
-    Serial.println("GPS init OutputData selected");
+	Serial.println("GPS init OutputData selected");
 	#endif
-    gps->sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
+	gps->sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
 	// 1Hz GPS Fix
 	gps->sendCommand(PMTK_API_SET_FIX_CTL_5HZ);
 	#if DEBUG_LOG_SETUP
@@ -149,6 +149,10 @@ void Chrono::loopChrono(void) {
 				simulateNewLap = false;
 				lapTimer.newLap();
 				chronoGui.updateLapNumber(lapTimer.getLapNumber());
+
+				// TODO manage BEST / LAST delay calculation
+				chronoGui.updateLapDelay(lapTimer.getBestLapDelay());
+
 				if(intersectionPoint != NULL) {
 					delete intersectionPoint;
 				}

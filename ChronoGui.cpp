@@ -34,20 +34,25 @@
 #define GPS_INDICATOR_Y 15
 #define GPS_INDICATOR_R 10
 
-#define GPS_SAT_TEXTBOX_X 45
+#define GPS_SAT_TEXTBOX_X 50
 #define GPS_SAT_TEXTBOX_Y 4
-#define GPS_SAT_TEXTBOX_COL 80
+#define GPS_SAT_TEXTBOX_COL 85
 #define GPS_SAT_TEXTBOX_ROW 26
-
-#define LAP_COUNT_TEXTBOX_X 10
-#define LAP_COUNT_TEXTBOX_Y 214
-#define LAP_COUNT_TEXTBOX_COL 76
-#define LAP_COUNT_TEXTBOX_ROW 236
 
 #define LAP_TIME_TEXTBOX_X 24
 #define LAP_TIME_TEXTBOX_Y 104
 #define LAP_TIME_TEXTBOX_COL 220
 #define LAP_TIME_TEXTBOX_ROW 1
+
+#define LAP_COUNT_TEXTBOX_X 10
+#define LAP_COUNT_TEXTBOX_Y 220
+#define LAP_COUNT_TEXTBOX_COL 75
+#define LAP_COUNT_TEXTBOX_ROW 235
+
+#define LAP_DELAY_TEXTBOX_X 85
+#define LAP_DELAY_TEXTBOX_Y 220
+#define LAP_DELAY_TEXTBOX_COL 245
+#define LAP_DELAY_TEXTBOX_ROW 235
 
 ChronoGui::ChronoGui() {
 	this->tft = NULL;
@@ -76,11 +81,10 @@ void ChronoGui::initTft(ILI9341_due* tft) {
 	this->gpsSatTextBox->setFontLetterSpacing(5);
 	this->gpsSatTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
 
-	// Time text box initilization
+	// Time box
 	this->timeTextBox = new ILI9341_due_gText(this->tft);
 	this->timeTextBox->defineArea(LAP_TIME_TEXTBOX_X, LAP_TIME_TEXTBOX_Y, LAP_TIME_TEXTBOX_COL, LAP_TIME_TEXTBOX_ROW);
 	this->timeTextBox->selectFont(lapTimeFont);
-	//this->timeTextBox->selectFont(Arial_bold_14);
 	this->timeTextBox->setFontLetterSpacing(5);
 	this->timeTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
 	
@@ -91,12 +95,16 @@ void ChronoGui::initTft(ILI9341_due* tft) {
 	this->lapCountTextBox->setFontLetterSpacing(5);
 	this->lapCountTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
 	
+	// Lap delay BEST / LAST
+	this->lapDelayTextBox = new ILI9341_due_gText(this->tft);
+	this->lapDelayTextBox->defineArea(LAP_DELAY_TEXTBOX_X, LAP_DELAY_TEXTBOX_Y, LAP_DELAY_TEXTBOX_COL, LAP_DELAY_TEXTBOX_ROW);
+	this->lapDelayTextBox->selectFont(Arial_bold_14);
+	this->lapDelayTextBox->setFontLetterSpacing(5);
+
 	Serial.println("ChronoGui INIT - FINISH");
 }
 
 void ChronoGui::updateLapTime(long lapTime) {
-	Serial.println("UPDATE TIMER - START");
-	
 	uint16_t mins = 0;
 	uint16_t secs = 0;
 	uint16_t cents = 0;
@@ -128,10 +136,10 @@ void ChronoGui::updateLapTime(long lapTime) {
 	strcat (textBuff, centsBuffer);
 
 	this->timeTextBox->drawString(textBuff, gTextAlignTopLeft);
-	Serial.println("UPDATE TIMER - FINISH");
 }
 
 void ChronoGui::updateLapNumber(int lapCount) {
+	this->lapCountTextBox->clearArea(ILI9341_BLACK);
 	if(lapCount > 0) {
 		char textBuff[6];
 		sprintf(textBuff, "%d lap", lapCount);
@@ -151,6 +159,7 @@ void ChronoGui::updateGpsFixState(bool gpsState) {
 }
 
 void ChronoGui::updateGpsSatelliteNumber(int8_t satelliteNumber) {
+	this->gpsSatTextBox->clearArea(ILI9341_BLACK);
 	if(satelliteNumber > 0) {
 		char textBuff[7];
 		sprintf(textBuff, "%d sat", satelliteNumber);
@@ -158,6 +167,37 @@ void ChronoGui::updateGpsSatelliteNumber(int8_t satelliteNumber) {
 	} else {
 		this->gpsSatTextBox->drawString(":(", gTextAlignMiddleRight);
 	}
+}
+
+void ChronoGui::updateLapDelay(long delay) {
+	bool positive = (delay > 0);
+	delay = abs(delay);
+	
+	uint16_t secs = 0;
+	uint16_t cents = 0;
+	secs = delay / 1000;
+	cents = delay / 10;
+	cents = cents - (secs * 100);
+
+	char textBuff[10];
+	char centsBuffer[2];
+
+	if(positive) {
+		this->lapDelayTextBox->setFontColor(ILI9341_RED, ILI9341_BLACK);
+		sprintf(textBuff, "+ %d.", secs);
+	} else {
+		this->lapDelayTextBox->setFontColor(ILI9341_GREEN, ILI9341_BLACK);
+		sprintf(textBuff, "- %d.", secs);
+	}
+
+	sprintf(centsBuffer, "%d", cents);
+	if(cents < 10) {
+		strcat (textBuff, "0");
+	}
+	strcat (textBuff, centsBuffer);
+
+	this->lapDelayTextBox->clearArea(ILI9341_BLACK);
+	this->lapDelayTextBox->drawString(textBuff, gTextAlignMiddleCenter);
 }
 
 void ChronoGui::updateGearCounter(uint8_t gear) {

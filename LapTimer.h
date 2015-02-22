@@ -12,8 +12,15 @@ class LapTimer {
 		void stopTimer();
 		void newLap();
 		void sector();
+		long getBestLapDelay();
+		long getLastLapDelay();
 	private:
 		int lapCounter;
 		long startLapTimestamp;
 		long finishLapTimestamp;
+
+		long bestLapTime;
+		long bestLapTimeDelay;
+		long previousLapTime;
+		long previousLapTimeDelay;
 };

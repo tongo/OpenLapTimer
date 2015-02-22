@@ -12,6 +12,11 @@ LapTimer::LapTimer() {
 	lapCounter = 0;
 	startLapTimestamp = 0;
 	finishLapTimestamp = 0;
+	
+	bestLapTime = 0;
+	bestLapTimeDelay = 0;
+	previousLapTime = 0;
+	previousLapTimeDelay = 0;
 }
 
 int LapTimer::getLapNumber() {
@@ -28,7 +33,23 @@ void LapTimer::stopTimer() {
 }
 void LapTimer::newLap() {
 	stopTimer();
+	long lapTime = finishLapTimestamp - startLapTimestamp;
+	// calculating delay
+	bestLapTimeDelay = lapTime - bestLapTime;
+	previousLapTimeDelay = lapTime - previousLapTime;
+
+	previousLapTime = lapTime;
+	if(lapTime < bestLapTime || bestLapTime == 0) {
+		bestLapTime = lapTime;
+	}
 	startTimer();
 	lapCounter ++;
 }
 void LapTimer::sector() { }
+
+long LapTimer::getBestLapDelay() {
+	return bestLapTimeDelay;
+}
+long LapTimer::getLastLapDelay() {
+	return previousLapTimeDelay;
+}

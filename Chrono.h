@@ -10,8 +10,6 @@
 #include "Adafruit_GPS.h"
 #include "Track.h"
 #include "GpsPoint.h"
-//#include "SD.h"
-//#include "MyAdafruit_ILI9341.h"
 #include <ILI9341_due.h>
 
 #ifndef CHRONO_H_
