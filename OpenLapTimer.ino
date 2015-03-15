@@ -49,28 +49,19 @@ void setup() {
   Serial.println("START SETUP Open LapTimer!");
   pinMode(FINISH_LINE_BUTTON, INPUT);
   
-  Serial.println("Chrono setup");
-  chrono = new Chrono(tft, gps, &gpsSerial);
-  Serial.println("Chrono setup finish");
-  
-  // SD-Card
-  
-
+  // SD-Card - initialize it before Chrono
+  bool useSd = false;
   if(sd->begin(SD_CS, SPI_HALF_SPEED)) {
-    chrono->setLogSdCard(true);
+    useSd = true;
     Serial.println("SD-Card initialized OK");
   } else {
-    Serial.println("SD-Card not initialized");
+    Serial.println("SD-Card NOT initialized");
   }
-  /*
-  if (SD.begin(SD_CS)) {
-    chrono->setLogSdCard(true);
-  } else {
-    delete(sd);
-    sd = NULL
-    Serial.println("SD-Card not initialized");
-  }
-  */
+  
+  Serial.println("Chrono setup");
+  chrono = new Chrono(tft, gps, &gpsSerial);
+  chrono->setLogSdCard(useSd);
+  Serial.println("Chrono setup finish");
   
   Serial.println("FINE SETUP LapTimer!");
 }
@@ -78,11 +69,8 @@ void setup() {
 
 void loop(void) {
   long loopLenght = millis() - loopLenghtTimestamp;
-  Serial.print("loop: ");
-  Serial.println(loopLenght);
-  
   loopLenghtTimestamp = millis();
-  
+      
   // test button state
   int currentTestButtonState = digitalRead(FINISH_LINE_BUTTON);
   //Serial.println(currentTestButtonState);
@@ -92,6 +80,8 @@ void loop(void) {
   if (currentTestButtonState == HIGH && prevTestButtonState == LOW) {
     Serial.print("ButtonTest Pressed");
     chrono->simulateNewLap = true;
+    Serial.print("loop: ");
+    Serial.println(loopLenght);
   }
   prevTestButtonState = currentTestButtonState;
   

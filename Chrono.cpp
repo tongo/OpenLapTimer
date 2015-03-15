@@ -7,7 +7,8 @@
 
 #include "Chrono.h"
 #define DEBUG_LOG_SETUP false
-#define DEBUG_LOG true
+#define DEBUG_LOG false
+#define GPS_BAUD_RATE 57600
 
 Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial) {
 	lcdTft->begin();
@@ -33,14 +34,20 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 	Serial.println("GPS assigned");
 	#endif
 
-	this->gps->begin(9600);
+	this->gps->begin(GPS_BAUD_RATE);
 	#if DEBUG_LOG_SETUP
 	Serial.println("GPS initialized");
 	#endif
 
 	gpsSerial->begin(9600);
-
-	this->gps->sendCommand(PMTK_SET_BAUD_9600);
+	//this->gps->sendCommand(PMTK_SET_BAUD_9600);
+	this->gps->sendCommand(PMTK_SET_BAUD_57600);
+	gpsSerial->flush();
+	delay(100);
+	gpsSerial->end();
+	delay(100);
+	gpsSerial->begin(GPS_BAUD_RATE);
+	
 	#if DEBUG_LOG_SETUP
 	Serial.println("GPS init baudRate selected");
 	#endif
@@ -100,8 +107,16 @@ Chrono::~Chrono() {
 
 void Chrono::setLogSdCard(bool useSdCard) {
 	this->useSdCard = useSdCard;
-	if(logFile != NULL) {
+	if(logFile == NULL) {
 		this->logFile = new SdFile();
+		Serial.println("Log file initialization...");
+		if (logFile->open("syslog.log", O_WRITE | O_CREAT | O_APPEND)) {
+			Serial.println("Log file OK");
+			logFile->println("*** LOGGING ***");
+			logFile->close();
+		} else {
+			Serial.println("Log file initialization ERROR");
+		}
 	}
 }
 
@@ -120,7 +135,6 @@ void Chrono::loopChrono(void) {
 
 	if (gps->newNMEAreceived()) {
 		#if DEBUG_LOG
-		Serial.print("NMEA=");
 		Serial.println(gps->lastNMEA());
 		#endif
 		// NMEA parsing
@@ -133,11 +147,6 @@ void Chrono::loopChrono(void) {
 			Serial.print(", ");
 			Serial.print(gps->longitude, 4); Serial.println(gps->lon);
 			Serial.print("Satellites: "); Serial.println((int)gps->satellites);
-
-			if(gpsStelliteNumber != gps->satellites) {
-				gpsStelliteNumber = gps->satellites;
-				chronoGui.updateGpsSatelliteNumber(gps->satellites);
-			}
 		}
 
 		#if DEBUG_LOG
@@ -180,6 +189,11 @@ void Chrono::loopChrono(void) {
 		gpsFixState = gps->fix;
 	}
 
+	if(gpsStelliteNumber != gps->satellites) {
+		gpsStelliteNumber = gps->satellites;
+		chronoGui.updateGpsSatelliteNumber(gps->satellites);
+	}
+
 	#if DEBUG_LOG
 		Serial.print("Update GUI");
 	#endif
@@ -195,10 +209,8 @@ float knotsToKmH(float speed) {
 }
 
 void Chrono::logSdCard(GpsPoint* intersectionPoint) {
-
-	Serial.println("Logging to SD");
-	if (logFile->open("sysLog.log", O_WRITE | O_CREAT | O_APPEND)) {
-		Serial.println("Logging ...");
+  
+	if (logFile->open("syslog.log", O_WRITE | O_CREAT | O_APPEND)) {
 
 		logFile->print(gps->day);
 		logFile->print("-");
