@@ -7,7 +7,7 @@
 
 #include "Chrono.h"
 #define DEBUG_LOG_SETUP false
-#define DEBUG_LOG false
+#define DEBUG_LOG true
 
 Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial) {
 	lcdTft->begin();
@@ -89,6 +89,7 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 
 	// SD-Card
 	this->useSdCard = false;
+	this->logFile = NULL;
 
 	chronoGui.updateGearCounter(0);
 }
@@ -99,6 +100,9 @@ Chrono::~Chrono() {
 
 void Chrono::setLogSdCard(bool useSdCard) {
 	this->useSdCard = useSdCard;
+	if(logFile != NULL) {
+		this->logFile = new SdFile();
+	}
 }
 
 void Chrono::loopChrono(void) {
@@ -114,9 +118,9 @@ void Chrono::loopChrono(void) {
 	Serial.println("gpsSerial red");
 	#endif
 
-	//Serial.println("");
 	if (gps->newNMEAreceived()) {
 		#if DEBUG_LOG
+		Serial.print("NMEA=");
 		Serial.println(gps->lastNMEA());
 		#endif
 		// NMEA parsing
@@ -136,13 +140,20 @@ void Chrono::loopChrono(void) {
 			}
 		}
 
-
 		#if DEBUG_LOG
 		Serial.print("Check new Position ...");
 		#endif
 
 		newPoint.updatePointDegree(gps->latitude, gps->longitude);
+
+		if(useSdCard && logFile != NULL) {
+			logSdCard(&newPoint);
+		}
+
 		if(!lastPoint.equalsGpsPoint(&newPoint) || simulateNewLap) {
+			#if DEBUG_LOG
+			Serial.print("NEW POSITION");
+			#endif
 			// Check new Lap
 			GpsPoint* intersectionPoint = track->isFinishLinePassed(&lastPoint, &newPoint);
 			if(intersectionPoint != NULL || simulateNewLap) {
@@ -157,55 +168,6 @@ void Chrono::loopChrono(void) {
 					delete intersectionPoint;
 				}
 			}
-
-			// SD-Card logging (only on new Position change)
-			if(useSdCard) {
-				/*
-				File dataFile = SD.open("track.txt", FILE_WRITE);
-				if (dataFile) {
-					dataFile.print(gps->day);
-					dataFile.print("-");
-					dataFile.print(gps->month);
-					dataFile.print("-");
-					dataFile.print(gps->year);
-					dataFile.print(" ");
-
-					dataFile.print(gps->hour);
-					dataFile.print(":");
-					dataFile.print(gps->minute);
-					dataFile.print(":");
-					dataFile.print(gps->seconds);
-					dataFile.print(".");
-					dataFile.print(gps->milliseconds);
-					dataFile.print(";");
-
-					//dataFile.print("LAST LAT: ");
-					dataFile.print(lastPoint.latitude);
-					dataFile.print(";");
-					//dataFile.print("LAST LON: ");
-					dataFile.print(lastPoint.longitude);
-					dataFile.print(";");
-					//dataFile.print("NEW LAT: ");
-					dataFile.print(newPoint.latitude);
-					dataFile.print(";");
-					//dataFile.print("NEW LON: ");
-					dataFile.print(newPoint.longitude);
-					dataFile.print(";");
-
-					if(intersectionPoint != NULL) {
-						dataFile.print("1;");
-						dataFile.print(intersectionPoint->latitude);
-						dataFile.print(";");
-						dataFile.print(intersectionPoint->longitude);
-						dataFile.print(";");
-					} else {
-						dataFile.print("0;;;");
-					}
-					dataFile.println("");
-					dataFile.close();
-				}
-				*/
-			}
 		}
 
 		lastPoint.updatePointDecimal(newPoint.latitude, newPoint.longitude);
@@ -218,13 +180,61 @@ void Chrono::loopChrono(void) {
 		gpsFixState = gps->fix;
 	}
 
+	#if DEBUG_LOG
+		Serial.print("Update GUI");
+	#endif
 	chronoGui.updateLapTime(lapTimer.getCurrentLapTime());
 }
 
-void Chrono::updateLapTimeGui() {
-	chronoGui.updateLapTime(lapTimer.getCurrentLapTime());
-}
+// void Chrono::updateLapTimeGui() {
+// 	chronoGui.updateLapTime(lapTimer.getCurrentLapTime());
+// }
 
 float knotsToKmH(float speed) {
 	return speed * 1.852;
+}
+
+void Chrono::logSdCard(GpsPoint* intersectionPoint) {
+
+	Serial.println("Logging to SD");
+	if (logFile->open("sysLog.log", O_WRITE | O_CREAT | O_APPEND)) {
+		Serial.println("Logging ...");
+
+		logFile->print(gps->day);
+		logFile->print("-");
+		logFile->print(gps->month);
+		logFile->print("-");
+		logFile->print(gps->year);
+		logFile->print(" ");
+
+		logFile->print(gps->hour);
+		logFile->print(":");
+		logFile->print(gps->minute);
+		logFile->print(":");
+		logFile->print(gps->seconds);
+		logFile->print(".");
+		logFile->print(gps->milliseconds);
+		logFile->print(";");
+
+		//dataFile.print("NEW LAT: ");
+		logFile->print(newPoint.latitude);
+		logFile->print(";");
+		//dataFile.print("NEW LON: ");
+		logFile->print(newPoint.longitude);
+		logFile->print(";");
+
+		if(intersectionPoint != NULL) {
+			logFile->print("1;");
+			logFile->print(intersectionPoint->latitude);
+			logFile->print(";");
+			logFile->print(intersectionPoint->longitude);
+			logFile->print(";");
+		} else {
+			logFile->print("0;;;");
+		}
+		logFile->println("");
+		logFile->close();
+	} else {
+		Serial.println("Open file error");
+	}
 }

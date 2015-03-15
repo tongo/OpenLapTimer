@@ -4,6 +4,7 @@
 #include <ILI_SdFatConfig.h>
 #include <ILI9341_due_gText.h>
 #include <ILI9341_due.h>
+#include <SdFat.h>
 
 //#include "fonts/Arial_bold_14.h"
 
@@ -31,13 +32,17 @@ int prevTestButtonState = 0;
 ILI9341_due* tft = new ILI9341_due(TFT_CS, TFT_DC, TFT_RST);
 
 // SD-Card
-//#define SD_CS 4
+#define SD_CS 7
+
+SdFat* sd = new SdFat();
 
 // GPS
 #define gpsSerial Serial1
 Adafruit_GPS* gps = new Adafruit_GPS(&gpsSerial);
 
 Chrono* chrono;
+
+long loopLenghtTimestamp;
 
 void setup() {
   Serial.begin(115200);
@@ -48,11 +53,21 @@ void setup() {
   chrono = new Chrono(tft, gps, &gpsSerial);
   Serial.println("Chrono setup finish");
   
-  /*
   // SD-Card
+  
+
+  if(sd->begin(SD_CS, SPI_HALF_SPEED)) {
+    chrono->setLogSdCard(true);
+    Serial.println("SD-Card initialized OK");
+  } else {
+    Serial.println("SD-Card not initialized");
+  }
+  /*
   if (SD.begin(SD_CS)) {
     chrono->setLogSdCard(true);
   } else {
+    delete(sd);
+    sd = NULL
     Serial.println("SD-Card not initialized");
   }
   */
@@ -62,6 +77,12 @@ void setup() {
 
 
 void loop(void) {
+  long loopLenght = millis() - loopLenghtTimestamp;
+  Serial.print("loop: ");
+  Serial.println(loopLenght);
+  
+  loopLenghtTimestamp = millis();
+  
   // test button state
   int currentTestButtonState = digitalRead(FINISH_LINE_BUTTON);
   //Serial.println(currentTestButtonState);
