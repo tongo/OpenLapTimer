@@ -11,6 +11,7 @@
 #include "Track.h"
 #include "GpsPoint.h"
 #include <ILI9341_due.h>
+#include <SdFat.h>
 
 #ifndef CHRONO_H_
 #define CHRONO_H_
@@ -21,11 +22,13 @@ public:
 	virtual ~Chrono();
 	void loopChrono(void);
 	void setLogSdCard(bool useSdCard);
-	void updateLapTimeGui();
+	// void updateLapTimeGui();
 
 	// TEST
 	boolean simulateNewLap;
 private:
+	void logSdCard(GpsPoint* intersectionPoint);
+
 	LapTimer lapTimer;
 	ChronoGui chronoGui;
 	Adafruit_GPS* gps;
@@ -40,6 +43,7 @@ private:
 	GpsPoint newPoint;
 
 	bool useSdCard;
+	SdFile* logFile;
 };
 
 #endif /* CHRONO_H_ */

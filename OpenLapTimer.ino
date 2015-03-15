@@ -4,6 +4,7 @@
 #include <ILI_SdFatConfig.h>
 #include <ILI9341_due_gText.h>
 #include <ILI9341_due.h>
+#include <SdFat.h>
 
 //#include "fonts/Arial_bold_14.h"
 
@@ -31,7 +32,9 @@ int prevTestButtonState = 0;
 ILI9341_due* tft = new ILI9341_due(TFT_CS, TFT_DC, TFT_RST);
 
 // SD-Card
-//#define SD_CS 4
+#define SD_CS 7
+
+SdFat* sd = new SdFat();
 
 // GPS
 #define gpsSerial Serial1
@@ -39,29 +42,35 @@ Adafruit_GPS* gps = new Adafruit_GPS(&gpsSerial);
 
 Chrono* chrono;
 
+long loopLenghtTimestamp;
+
 void setup() {
   Serial.begin(115200);
   Serial.println("START SETUP Open LapTimer!");
   pinMode(FINISH_LINE_BUTTON, INPUT);
   
+  // SD-Card - initialize it before Chrono
+  bool useSd = false;
+  if(sd->begin(SD_CS, SPI_HALF_SPEED)) {
+    useSd = true;
+    Serial.println("SD-Card initialized OK");
+  } else {
+    Serial.println("SD-Card NOT initialized");
+  }
+  
   Serial.println("Chrono setup");
   chrono = new Chrono(tft, gps, &gpsSerial);
+  chrono->setLogSdCard(useSd);
   Serial.println("Chrono setup finish");
-  
-  /*
-  // SD-Card
-  if (SD.begin(SD_CS)) {
-    chrono->setLogSdCard(true);
-  } else {
-    Serial.println("SD-Card not initialized");
-  }
-  */
   
   Serial.println("FINE SETUP LapTimer!");
 }
 
 
 void loop(void) {
+  long loopLenght = millis() - loopLenghtTimestamp;
+  loopLenghtTimestamp = millis();
+      
   // test button state
   int currentTestButtonState = digitalRead(FINISH_LINE_BUTTON);
   //Serial.println(currentTestButtonState);
@@ -71,6 +80,8 @@ void loop(void) {
   if (currentTestButtonState == HIGH && prevTestButtonState == LOW) {
     Serial.print("ButtonTest Pressed");
     chrono->simulateNewLap = true;
+    Serial.print("loop: ");
+    Serial.println(loopLenght);
   }
   prevTestButtonState = currentTestButtonState;
   
