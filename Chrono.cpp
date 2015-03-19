@@ -6,6 +6,7 @@
  */
 
 #include "Chrono.h"
+ 
 #define DEBUG_LOG_SETUP false
 #define DEBUG_LOG false
 #define GPS_BAUD_RATE 57600
@@ -98,6 +99,9 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 	this->useSdCard = false;
 	this->logFile = NULL;
 
+	// TouchScreen
+	this->touchScreenManager = NULL;
+
 	chronoGui.updateGearCounter(0);
 }
 
@@ -120,7 +124,20 @@ void Chrono::setLogSdCard(bool useSdCard) {
 	}
 }
 
+void Chrono::setTouchScreen(TouchScreen* touchScreen) {
+	this->touchScreenManager = new TouchScreenManager(touchScreen);
+}
+
 void Chrono::loopChrono(void) {
+
+	if(this->touchScreenManager != NULL) {
+		int operation = this->touchScreenManager->getChronoOperation();
+		if(operation > 0) {		
+			Serial.print("Operation: ");
+			Serial.println(operation);
+		}
+	}
+
 	#if DEBUG_LOG
 	Serial.println("Reading gpsSerial...");
 	#endif
@@ -142,11 +159,13 @@ void Chrono::loopChrono(void) {
 
 		if (gps->fix) {
 			// log
+		#if DEBUG_LOG
 			Serial.print("Location: ");
 			Serial.print(gps->latitude, 4); Serial.print(gps->lat);
 			Serial.print(", ");
 			Serial.print(gps->longitude, 4); Serial.println(gps->lon);
 			Serial.print("Satellites: "); Serial.println((int)gps->satellites);
+		#endif
 		}
 
 		#if DEBUG_LOG
@@ -229,17 +248,17 @@ void Chrono::logSdCard(GpsPoint* intersectionPoint) {
 		logFile->print(";");
 
 		//dataFile.print("NEW LAT: ");
-		logFile->print(newPoint.latitude);
+		logFile->print(newPoint.latitude, 4);
 		logFile->print(";");
 		//dataFile.print("NEW LON: ");
-		logFile->print(newPoint.longitude);
+		logFile->print(newPoint.longitude, 4);
 		logFile->print(";");
 
 		if(intersectionPoint != NULL) {
 			logFile->print("1;");
-			logFile->print(intersectionPoint->latitude);
+			logFile->print(intersectionPoint->latitude, 4);
 			logFile->print(";");
-			logFile->print(intersectionPoint->longitude);
+			logFile->print(intersectionPoint->longitude, 4);
 			logFile->print(";");
 		} else {
 			logFile->print("0;;;");

@@ -5,13 +5,15 @@
  *      Author: Tongo
  */
 
+#include <ILI9341_due.h>
+#include <SdFat.h>
+#include <TouchScreen.h>
 #include "LapTimer.h"
 #include "ChronoGui.h"
 #include "Adafruit_GPS.h"
 #include "Track.h"
 #include "GpsPoint.h"
-#include <ILI9341_due.h>
-#include <SdFat.h>
+#include "TouchScreenManager.h"
 
 #ifndef CHRONO_H_
 #define CHRONO_H_
@@ -22,7 +24,7 @@ public:
 	virtual ~Chrono();
 	void loopChrono(void);
 	void setLogSdCard(bool useSdCard);
-	// void updateLapTimeGui();
+	void setTouchScreen(TouchScreen* touchScreen);
 
 	// TEST
 	boolean simulateNewLap;
@@ -44,6 +46,9 @@ private:
 
 	bool useSdCard;
 	SdFile* logFile;
+
+	// TouchScreen
+	TouchScreenManager* touchScreenManager;
 };
 
 #endif /* CHRONO_H_ */
