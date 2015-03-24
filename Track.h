@@ -14,11 +14,13 @@ class Track {
 public:
 	Track();
 	virtual ~Track();
+	GpsPoint* isFinishLinePassed(GpsPoint* start, GpsPoint* finish);
 
 	GpsPoint* finishLinePoint1;
 	GpsPoint* finishLinePoint2;
 
-	GpsPoint* isFinishLinePassed(GpsPoint* start, GpsPoint* finish);
+	char* trackName;
+	int trackIndex;
 };
 
 #endif /* TRACK_H_ */

@@ -10,6 +10,9 @@
 Track::Track() {
 	finishLinePoint1 = new GpsPoint(0, 0);
 	finishLinePoint2 = new GpsPoint(0, 0);
+
+	trackName = "none";
+	trackIndex = 0;
 }
 
 Track::~Track() { }

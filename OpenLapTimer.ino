@@ -7,6 +7,7 @@
 #include <SdFat.h>
 #include <TouchScreen.h>
 #include <Adafruit_GPS.h>
+#include <ArduinoJson.h>
 #include "Chrono.h"
 
 // TFT SPI pin

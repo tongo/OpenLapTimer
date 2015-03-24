@@ -8,6 +8,7 @@
 #include <ILI9341_due.h>
 #include <SdFat.h>
 #include <TouchScreen.h>
+#include <ArduinoJson.h>
 #include "LapTimer.h"
 #include "ChronoGui.h"
 #include "Adafruit_GPS.h"
@@ -29,7 +30,9 @@ public:
 	// TEST
 	boolean simulateNewLap;
 private:
-	void logSdCard(GpsPoint* intersectionPoint);
+	void logPositionToSdCard(GpsPoint* intersectionPoint);
+	void loadTrack(bool nextTrack);
+	void handleUserOperation(int operation);
 
 	LapTimer lapTimer;
 	ChronoGui chronoGui;

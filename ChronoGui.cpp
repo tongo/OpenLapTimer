@@ -54,6 +54,26 @@
 #define LAP_DELAY_TEXTBOX_COL 245
 #define LAP_DELAY_TEXTBOX_ROW 235
 
+#define TRACK_NAME_TEXTBOX_X 130
+#define TRACK_NAME_TEXTBOX_Y 4
+#define TRACK_NAME_TEXTBOX_COL 309
+#define TRACK_NAME_TEXTBOX_ROW 26
+
+#define PREV_TRACK_ROW_X1 112
+#define PREV_TRACK_ROW_Y1 15
+#define PREV_TRACK_ROW_X2 122
+#define PREV_TRACK_ROW_Y2 10
+#define PREV_TRACK_ROW_X3 122
+#define PREV_TRACK_ROW_Y3 20
+
+#define NEXT_TRACK_ROW_X1 320
+#define NEXT_TRACK_ROW_Y1 15
+#define NEXT_TRACK_ROW_X2 310
+#define NEXT_TRACK_ROW_Y2 10
+#define NEXT_TRACK_ROW_X3 310
+#define NEXT_TRACK_ROW_Y3 20
+
+
 ChronoGui::ChronoGui() {
 	this->tft = NULL;
 	this->timeTextBox = NULL;
@@ -80,6 +100,17 @@ void ChronoGui::initTft(ILI9341_due* tft) {
 	this->gpsSatTextBox->selectFont(Arial_bold_14);
 	this->gpsSatTextBox->setFontLetterSpacing(5);
 	this->gpsSatTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
+
+	// Track name
+	this->trackNameTextBox = new ILI9341_due_gText(this->tft);
+	this->trackNameTextBox->defineArea(TRACK_NAME_TEXTBOX_X, TRACK_NAME_TEXTBOX_Y, TRACK_NAME_TEXTBOX_COL, TRACK_NAME_TEXTBOX_ROW);
+	this->trackNameTextBox->selectFont(Arial_bold_14);
+	this->trackNameTextBox->setFontLetterSpacing(5);
+	this->trackNameTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
+
+	// Prev - Next Track triangle button
+	this->tft->drawTriangle(PREV_TRACK_ROW_X1, PREV_TRACK_ROW_Y1, PREV_TRACK_ROW_X2, PREV_TRACK_ROW_Y2, PREV_TRACK_ROW_X3, PREV_TRACK_ROW_Y3, ILI9341_WHITE);
+	this->tft->drawTriangle(NEXT_TRACK_ROW_X1, NEXT_TRACK_ROW_Y1, NEXT_TRACK_ROW_X2, NEXT_TRACK_ROW_Y2, NEXT_TRACK_ROW_X3, NEXT_TRACK_ROW_Y3, ILI9341_WHITE);
 
 	// Time box
 	this->timeTextBox = new ILI9341_due_gText(this->tft);
@@ -167,6 +198,11 @@ void ChronoGui::updateGpsSatelliteNumber(int8_t satelliteNumber) {
 	} else {
 		this->gpsSatTextBox->drawString(":(", gTextAlignMiddleRight);
 	}
+}
+
+void ChronoGui::updateTrackName(char* trackName) {
+	this->trackNameTextBox->clearArea(ILI9341_BLACK);
+	this->trackNameTextBox->drawString(trackName, gTextAlignMiddleCenter);
 }
 
 void ChronoGui::updateLapDelay(long delay) {
