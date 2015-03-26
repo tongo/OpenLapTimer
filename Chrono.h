@@ -31,10 +31,13 @@ public:
 	boolean simulateNewLap;
 private:
 	void logPositionToSdCard(GpsPoint* intersectionPoint);
-	void loadTrack(bool nextTrack);
 	void handleUserOperation(int operation);
-
+	void loadTrack(bool nextTrack);
+	void changeTimerState (bool state);
+	
 	LapTimer lapTimer;
+	bool isTimerRunning;
+
 	ChronoGui chronoGui;
 	Adafruit_GPS* gps;
 	Track* track;

@@ -22,6 +22,7 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 	#endif
 	chronoGui.initTft(lcdTft);
 	lapTimer = LapTimer();
+	isTimerRunning = false;
 
 	#if DEBUG_LOG_SETUP
 		Serial.println("LapTimer init finish");
@@ -144,7 +145,7 @@ void Chrono::loopChrono(void) {
 
 	while(char c = gps->read()) {
 		#if DEBUG_LOG
-		Serial.print(c);
+			Serial.print(c);
 		#endif
 	}
 
@@ -171,18 +172,18 @@ void Chrono::loopChrono(void) {
 		}
 
 		#if DEBUG_LOG
-		Serial.print("Check new Position ...");
+			Serial.print("Check new Position ...");
 		#endif
 
 		newPoint.updatePointDegree(gps->latitude, gps->longitude);
 
 		if(!lastPoint.equalsGpsPoint(&newPoint) || simulateNewLap) {
 			#if DEBUG_LOG
-			Serial.print("NEW POSITION");
+				Serial.print("NEW POSITION");
 			#endif
 			// Check new Lap
 			GpsPoint* intersectionPoint = track->isFinishLinePassed(&lastPoint, &newPoint);
-			if(intersectionPoint != NULL || simulateNewLap) {
+			if((intersectionPoint != NULL || simulateNewLap) && isTimerRunning) {
 				simulateNewLap = false;
 				lapTimer.newLap();
 				chronoGui.updateLapNumber(lapTimer.getLapNumber());
@@ -203,7 +204,7 @@ void Chrono::loopChrono(void) {
 		lastPoint.updatePointDecimal(newPoint.latitude, newPoint.longitude);
 	}
 	#if DEBUG_LOG
-	Serial.print("Check GPS Fix ...");
+		Serial.print("Check GPS Fix ...");
 	#endif
 	if(gpsFixState != gps->fix) {
 		chronoGui.updateGpsFixState(gps->fix);
@@ -218,7 +219,11 @@ void Chrono::loopChrono(void) {
 	#if DEBUG_LOG
 		Serial.print("Update GUI");
 	#endif
-	chronoGui.updateLapTime(lapTimer.getCurrentLapTime());
+	if(isTimerRunning) {
+		chronoGui.updateLapTime(lapTimer.getCurrentLapTime());
+	} else {
+		chronoGui.updateLapTime(0);
+	}
 }
 
 float knotsToKmH(float speed) {
@@ -270,6 +275,7 @@ void Chrono::handleUserOperation(int operation) {
 	if(operation == OPERATION_NO_OPERATION) { return; }
 	else if(operation == OPERATION_NEXT_TRACK) { loadTrack(true); }
 	else if(operation == OPERATION_PREV_TRACK) { loadTrack(false); }
+	else if(operation == OPERATION_CHANGE_TIMER_STATE) { changeTimerState(!isTimerRunning); }
 }
 
 void Chrono::loadTrack(bool nextTrack) {
@@ -336,5 +342,14 @@ void Chrono::loadTrack(bool nextTrack) {
 		track->finishLinePoint2->longitude = tracciato["finishLine"][1]["lon"].as<float>();
 
 		chronoGui.updateTrackName(track->trackName);
+	}
+}
+
+void Chrono::changeTimerState (bool state) {
+	isTimerRunning = state;
+	if(state) {
+		lapTimer.startTimer();
+	} else {
+		lapTimer.stopTimer();
 	}
 }
