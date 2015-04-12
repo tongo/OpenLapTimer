@@ -20,6 +20,7 @@ public:
 	void updateGpsSatelliteNumber(int8_t satelliteNumber);
 	void updateTrackName(char* trackName);
 	void updateLapDelay(long delay);
+	void updateLapDelayState(bool bestLapDelay);
 	void updateGearCounter(uint8_t gear);
 private:
 	ILI9341_due* tft;
@@ -28,5 +29,6 @@ private:
 	ILI9341_due_gText * trackNameTextBox;
 	ILI9341_due_gText * lapCountTextBox;
 	ILI9341_due_gText * lapDelayTextBox;
+	ILI9341_due_gText * lapDelayStateTextBox;
 };
 

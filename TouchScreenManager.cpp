@@ -30,6 +30,11 @@
 #define TIMER_AREA_YM 83
 #define TIMER_AREA_YP 210
 
+#define LAP_DELAY_AREA_XM 253
+#define LAP_DELAY_AREA_XP 285
+#define LAP_DELAY_AREA_YM 54
+#define LAP_DELAY_AREA_YP 165
+
 #define DEBUG_TOUCH false
 
 TouchScreenManager::TouchScreenManager(TouchScreen* ts) {
@@ -74,6 +79,8 @@ int TouchScreenManager::checkChronoOperation() {
 	if(lastPoint.x > PREV_TRACK_AREA_XM && lastPoint.x < PREV_TRACK_AREA_XP && lastPoint.y > PREV_TRACK_AREA_YM && lastPoint.y < PREV_TRACK_AREA_YP) { return OPERATION_PREV_TRACK; }
 	// Change lapTimer state
 	if(lastPoint.x > TIMER_AREA_XM && lastPoint.x < TIMER_AREA_XP && lastPoint.y > TIMER_AREA_YM && lastPoint.y < TIMER_AREA_YP) { return OPERATION_CHANGE_TIMER_STATE; }
+	// Change lapDelay state
+	if(lastPoint.x > LAP_DELAY_AREA_XM && lastPoint.x < LAP_DELAY_AREA_XP && lastPoint.y > LAP_DELAY_AREA_YM && lastPoint.y < LAP_DELAY_AREA_YP) { return OPERATION_CHANGE_LAP_DELAY_STATE; }
 
 	return OPERATION_NO_OPERATION;
 }

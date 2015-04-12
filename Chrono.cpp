@@ -8,6 +8,7 @@
 #include "Chrono.h"
 
 #define DEBUG_LOG_SETUP false
+#define DEBUG_LOG_GPS true
 #define DEBUG_LOG false
 #define GPS_BAUD_RATE 57600
 
@@ -23,6 +24,7 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 	chronoGui.initTft(lcdTft);
 	lapTimer = LapTimer();
 	isTimerRunning = false;
+	lapTimerDelayBest = true;
 
 	#if DEBUG_LOG_SETUP
 		Serial.println("LapTimer init finish");
@@ -56,13 +58,15 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 	#endif
 
 	//gps->sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-	//GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-	gps->sendCommand(PMTK_SET_NMEA_OUTPUT_ALLDATA);
+	gps->sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+	//gps->sendCommand(PMTK_SET_NMEA_OUTPUT_ALLDATA);
 	// NMEA in Output frequency
 	#if DEBUG_LOG_SETUP
 		Serial.println("GPS init OutputData selected");
 	#endif
-	gps->sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
+	
+	gps->sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);
+	//gps->sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
 	// 1Hz GPS Fix
 	gps->sendCommand(PMTK_API_SET_FIX_CTL_5HZ);
 	#if DEBUG_LOG_SETUP
@@ -106,6 +110,7 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 	// TouchScreen
 	this->touchScreenManager = NULL;
 
+	chronoGui.updateLapDelayState(lapTimerDelayBest);
 	chronoGui.updateGearCounter(0);
 }
 
@@ -157,6 +162,11 @@ void Chrono::loopChrono(void) {
 		#if DEBUG_LOG
 			Serial.println(gps->lastNMEA());
 		#endif
+
+		#if DEBUG_LOG_GPS
+			logNmeaToSdCard(gps->lastNMEA());
+		#endif
+		
 		// NMEA parsing
 		gps->parse(gps->lastNMEA());
 
@@ -183,22 +193,25 @@ void Chrono::loopChrono(void) {
 			#endif
 			// Check new Lap
 			GpsPoint* intersectionPoint = track->isFinishLinePassed(&lastPoint, &newPoint);
+
+			if(useSdCard && logFile != NULL) {
+				logPositionToSdCard(intersectionPoint);
+			}
+
 			if((intersectionPoint != NULL || simulateNewLap) && isTimerRunning) {
 				simulateNewLap = false;
 				lapTimer.newLap();
+
+				logLapToSdCard();
+
 				chronoGui.updateLapNumber(lapTimer.getLapNumber());
 
-				// TODO manage BEST / LAST delay calculation
-				chronoGui.updateLapDelay(lapTimer.getBestLapDelay());
+				updateLapDelay();
 
 				if(intersectionPoint != NULL) {
 					delete intersectionPoint;
 				}
 			}
-		}
-
-		if(useSdCard && logFile != NULL) {
-			logPositionToSdCard(&newPoint);
 		}
 
 		lastPoint.updatePointDecimal(newPoint.latitude, newPoint.longitude);
@@ -226,6 +239,14 @@ void Chrono::loopChrono(void) {
 	}
 }
 
+void Chrono::updateLapDelay() {
+	if(lapTimerDelayBest) {
+		chronoGui.updateLapDelay(lapTimer.getBestLapDelay());
+	} else {
+		chronoGui.updateLapDelay(lapTimer.getLastLapDelay());
+	}
+}
+
 float knotsToKmH(float speed) {
 	return speed * 1.852;
 }
@@ -234,6 +255,7 @@ void Chrono::logPositionToSdCard(GpsPoint* intersectionPoint) {
 	if (!logFile->open("syslog.log", O_WRITE | O_CREAT | O_APPEND)) {
 		Serial.println("File syslog.log open ERROR");
 	} else {
+		logFile->print("POINT;");
 		logFile->print(gps->day);
 		logFile->print("-");
 		logFile->print(gps->month);
@@ -271,11 +293,34 @@ void Chrono::logPositionToSdCard(GpsPoint* intersectionPoint) {
 	}
 }
 
+void Chrono::logLapToSdCard() {
+	if (!logFile->open("syslog.log", O_WRITE | O_CREAT | O_APPEND)) {
+		Serial.println("File syslog.log open ERROR");
+	} else {
+		logFile->print("LAP;");
+		logFile->print(lapTimer.getLastLapTime());
+		logFile->print(";");
+		logFile->print(lapTimer.getLapNumber());
+		logFile->println("");
+		logFile->close();
+	}
+}
+
+void Chrono::logNmeaToSdCard(char* nmea) {
+	if (!logFile->open("nmea.log", O_WRITE | O_CREAT | O_APPEND)) {
+		Serial.println("File nmea.log open ERROR");
+	} else {
+		logFile->print(nmea);
+		logFile->close();
+	}
+}
+
 void Chrono::handleUserOperation(int operation) {
 	if(operation == OPERATION_NO_OPERATION) { return; }
 	else if(operation == OPERATION_NEXT_TRACK) { loadTrack(true); }
 	else if(operation == OPERATION_PREV_TRACK) { loadTrack(false); }
 	else if(operation == OPERATION_CHANGE_TIMER_STATE) { changeTimerState(!isTimerRunning); }
+	else if(operation == OPERATION_CHANGE_LAP_DELAY_STATE) { changeLapDelayState(); }
 }
 
 void Chrono::loadTrack(bool nextTrack) {
@@ -352,4 +397,11 @@ void Chrono::changeTimerState (bool state) {
 	} else {
 		lapTimer.stopTimer();
 	}
+}
+
+void Chrono::changeLapDelayState () {
+	// TODO update GUI with new delay STATE and delay TIME
+	lapTimerDelayBest = !lapTimerDelayBest;
+	chronoGui.updateLapDelayState(lapTimerDelayBest);
+	updateLapDelay();
 }

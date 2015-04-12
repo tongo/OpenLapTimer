@@ -49,9 +49,14 @@
 #define LAP_COUNT_TEXTBOX_COL 75
 #define LAP_COUNT_TEXTBOX_ROW 235
 
+#define LAP_DELAY_STATE_TEXTBOX_X 235
+#define LAP_DELAY_STATE_TEXTBOX_Y 220
+#define LAP_DELAY_STATE_TEXTBOX_COL 245
+#define LAP_DELAY_STATE_TEXTBOX_ROW 235
+
 #define LAP_DELAY_TEXTBOX_X 85
 #define LAP_DELAY_TEXTBOX_Y 220
-#define LAP_DELAY_TEXTBOX_COL 245
+#define LAP_DELAY_TEXTBOX_COL 235
 #define LAP_DELAY_TEXTBOX_ROW 235
 
 #define TRACK_NAME_TEXTBOX_X 130
@@ -126,6 +131,13 @@ void ChronoGui::initTft(ILI9341_due* tft) {
 	this->lapCountTextBox->setFontLetterSpacing(5);
 	this->lapCountTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
 	
+	// Lap delay State
+	this->lapDelayStateTextBox = new ILI9341_due_gText(this->tft);
+	this->lapDelayStateTextBox->defineArea(LAP_DELAY_STATE_TEXTBOX_X, LAP_DELAY_STATE_TEXTBOX_Y, LAP_DELAY_STATE_TEXTBOX_COL, LAP_DELAY_STATE_TEXTBOX_ROW);
+	this->lapDelayStateTextBox->selectFont(Arial_bold_14);
+	this->lapDelayStateTextBox->setFontLetterSpacing(5);
+	this->lapDelayStateTextBox->setFontColor(ILI9341_WHITE, ILI9341_BLACK);
+
 	// Lap delay BEST / LAST
 	this->lapDelayTextBox = new ILI9341_due_gText(this->tft);
 	this->lapDelayTextBox->defineArea(LAP_DELAY_TEXTBOX_X, LAP_DELAY_TEXTBOX_Y, LAP_DELAY_TEXTBOX_COL, LAP_DELAY_TEXTBOX_ROW);
@@ -203,6 +215,14 @@ void ChronoGui::updateGpsSatelliteNumber(int8_t satelliteNumber) {
 void ChronoGui::updateTrackName(char* trackName) {
 	this->trackNameTextBox->clearArea(ILI9341_BLACK);
 	this->trackNameTextBox->drawString(trackName, gTextAlignMiddleCenter);
+}
+
+void ChronoGui::updateLapDelayState(bool bestLapDelay) {
+	if(bestLapDelay) {
+		this->lapDelayStateTextBox->drawString("B", gTextAlignMiddleRight);
+	} else {
+		this->lapDelayStateTextBox->drawString("L", gTextAlignMiddleRight);
+	}
 }
 
 void ChronoGui::updateLapDelay(long delay) {

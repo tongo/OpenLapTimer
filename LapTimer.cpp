@@ -53,3 +53,6 @@ long LapTimer::getBestLapDelay() {
 long LapTimer::getLastLapDelay() {
 	return previousLapTimeDelay;
 }
+long LapTimer::getLastLapTime() {
+	return previousLapTime;
+}
