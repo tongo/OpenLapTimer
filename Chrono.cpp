@@ -8,7 +8,7 @@
 #include "Chrono.h"
 
 #define DEBUG_LOG_SETUP false
-#define DEBUG_LOG_GPS true
+#define DEBUG_LOG_GPS_NMEA_SD false
 #define DEBUG_LOG false
 #define GPS_BAUD_RATE 57600
 
@@ -67,7 +67,7 @@ Chrono::Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gps
 	
 	gps->sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);
 	//gps->sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
-	// 1Hz GPS Fix
+	// 5Hz GPS Fix
 	gps->sendCommand(PMTK_API_SET_FIX_CTL_5HZ);
 	#if DEBUG_LOG_SETUP
 		Serial.println("GPS init FixRate selected");
@@ -118,18 +118,59 @@ Chrono::~Chrono() {
 	// TODO Auto-generated destructor stub
 }
 
-void Chrono::setLogSdCard(bool useSdCard) {
-	this->useSdCard = useSdCard;
+void Chrono::setLogSdCard(SdFat* sd) {
+	if(sd == NULL) {
+		this->useSdCard = false;
+		return;
+	}
+	this->useSdCard = true;
+	sd->chdir("/", true);
+	SdFile file;
+	char dirName[14];
+	
+	int maxFolderName = 0;
+
+	while (file.openNext(sd->vwd(), O_READ)) {
+		if(!file.isDir()) {
+			file.close();
+			continue;
+		}
+		
+		file.getName(dirName, 14);
+		int folderNumber = atoi(dirName);
+		if(folderNumber > maxFolderName) {
+			maxFolderName = folderNumber;
+		}
+		
+		Serial.print(F("file: ")); Serial.println(dirName);
+		file.close();
+	}
+	maxFolderName ++;
+
+	sprintf(dirName, "/%d", maxFolderName);
+	this->logFileDirName = dirName;
+	sd->mkdir(this->logFileDirName, true);
+
+	char lofFileName[20];
+	sprintf(lofFileName, this->logFileDirName);
+	strcat (lofFileName, "/syslog.log");
+
+	Serial.print("Log file: "); Serial.println(lofFileName);
 	if(logFile == NULL) {
 		this->logFile = new SdFile();
 		Serial.println("Log file initialization...");
-		if (logFile->open("syslog.log", O_WRITE | O_CREAT | O_APPEND)) {
+		if (logFile->open(lofFileName, O_WRITE | O_CREAT | O_APPEND)) {
 			Serial.println("Log file OK");
 			logFile->println("*** LOGGING NEW SESSION ***");
-			logFile->close();
+			logFile->sync();
+			//logFile->close();
 		} else {
 			Serial.println("Log file initialization ERROR");
 		}
+	}
+
+	if(logNmeaFile == NULL) {
+		this->logNmeaFile = new SdFile();
 	}
 }
 
@@ -163,7 +204,7 @@ void Chrono::loopChrono(void) {
 			Serial.println(gps->lastNMEA());
 		#endif
 
-		#if DEBUG_LOG_GPS
+		#if DEBUG_LOG_GPS_NMEA_SD
 			logNmeaToSdCard(gps->lastNMEA());
 		#endif
 		
@@ -188,15 +229,36 @@ void Chrono::loopChrono(void) {
 		newPoint.updatePointDegree(gps->latitude, gps->longitude);
 
 		if(!lastPoint.equalsGpsPoint(&newPoint) || simulateNewLap) {
-			#if DEBUG_LOG
-				Serial.print("NEW POSITION");
-			#endif
 			// Check new Lap
+			/*
+			Serial.println("NEW POSITION");
+			Serial.println(gps->lastNMEA());
+
+			Serial.print("GPS float [latitude= "); Serial.print(gps->latitude, 6); Serial.print(", ");
+			Serial.print("longitude= "); Serial.print(gps->longitude, 6); Serial.println("]");
+
+			Serial.print("GPS long [latitude= "); Serial.print(gps->latitude_fixed); Serial.print(", ");
+			Serial.print("longitude= "); Serial.print(gps->longitude_fixed); Serial.println("]");
+
+			Serial.print("newPoint [latitude= "); Serial.print(newPoint.latitude, 6); Serial.print(", ");
+			Serial.print("longitude= "); Serial.print(newPoint.longitude, 6); Serial.println("]");
+			*/
+			
 			GpsPoint* intersectionPoint = track->isFinishLinePassed(&lastPoint, &newPoint);
 
-			if(useSdCard && logFile != NULL) {
-				logPositionToSdCard(intersectionPoint);
+			/*
+			if(intersectionPoint == NULL) {
+				Serial.println("");
+				Serial.println("NO INTERSECTION");
+			} else {
+				Serial.print("IntersectionPoint [latitude= "); Serial.print(intersectionPoint->latitude, 6); Serial.print(", ");
+				Serial.print("longitude= "); Serial.print(intersectionPoint->longitude, 6); Serial.println("]");
 			}
+
+			Serial.println("");
+			Serial.println("*******************************************************");
+			Serial.println("");
+			*/
 
 			if((intersectionPoint != NULL || simulateNewLap) && isTimerRunning) {
 				simulateNewLap = false;
@@ -237,6 +299,9 @@ void Chrono::loopChrono(void) {
 	} else {
 		chronoGui.updateLapTime(0);
 	}
+	if(useSdCard && logFile != NULL) {
+		logPositionToSdCard(NULL);
+	}
 }
 
 void Chrono::updateLapDelay() {
@@ -252,67 +317,88 @@ float knotsToKmH(float speed) {
 }
 
 void Chrono::logPositionToSdCard(GpsPoint* intersectionPoint) {
-	if (!logFile->open("syslog.log", O_WRITE | O_CREAT | O_APPEND)) {
-		Serial.println("File syslog.log open ERROR");
-	} else {
-		logFile->print("POINT;");
-		logFile->print(gps->day);
-		logFile->print("-");
-		logFile->print(gps->month);
-		logFile->print("-");
-		logFile->print(gps->year);
-		logFile->print(" ");
-
-		logFile->print(gps->hour);
-		logFile->print(":");
-		logFile->print(gps->minute);
-		logFile->print(":");
-		logFile->print(gps->seconds);
-		logFile->print(".");
-		logFile->print(gps->milliseconds);
-		logFile->print(";");
-
-		//dataFile.print("NEW LAT: ");
-		logFile->print(newPoint.latitude, 6);
-		logFile->print(";");
-		//dataFile.print("NEW LON: ");
-		logFile->print(newPoint.longitude, 6);
-		logFile->print(";");
-
-		if(intersectionPoint != NULL) {
-			logFile->print("1;");
-			logFile->print(intersectionPoint->latitude, 6);
-			logFile->print(";");
-			logFile->print(intersectionPoint->longitude, 6);
-			logFile->print(";");
-		} else {
-			logFile->print("0;;;");
+	//long startTimestamp = millis();
+	if(!logFile->isOpen()) {
+		char lofFileName[20];
+		sprintf(lofFileName, this->logFileDirName);
+		strcat (lofFileName, "/syslog.log");
+		if(!logFile->open(lofFileName, O_WRITE | O_CREAT | O_APPEND)) {
+			Serial.println("File syslog.log open ERROR");
+			return;
 		}
-		logFile->println("");
-		logFile->close();
 	}
+	logFile->print("POINT;");
+	logFile->print(gps->day);
+	logFile->print("-");
+	logFile->print(gps->month);
+	logFile->print("-");
+	logFile->print(gps->year);
+	logFile->print(" ");
+
+	logFile->print(gps->hour);
+	logFile->print(":");
+	logFile->print(gps->minute);
+	logFile->print(":");
+	logFile->print(gps->seconds);
+	logFile->print(".");
+	logFile->print(gps->milliseconds);
+	logFile->print(";");
+
+	//dataFile.print("NEW LAT: ");
+	logFile->print(newPoint.latitude, 6);
+	logFile->print(";");
+	//dataFile.print("NEW LON: ");
+	logFile->print(newPoint.longitude, 6);
+	logFile->print(";");
+
+	if(intersectionPoint != NULL) {
+		logFile->print("1;");
+		logFile->print(intersectionPoint->latitude, 6);
+		logFile->print(";");
+		logFile->print(intersectionPoint->longitude, 6);
+		logFile->print(";");
+	} else {
+		logFile->print("0;;;");
+	}
+	logFile->println("");
+	logFile->sync();
+	//logFile->close();
+
+	//long sdTime = millis() - startTimestamp;
+	//Serial.println(sdTime);
 }
 
 void Chrono::logLapToSdCard() {
-	if (!logFile->open("syslog.log", O_WRITE | O_CREAT | O_APPEND)) {
-		Serial.println("File syslog.log open ERROR");
-	} else {
-		logFile->print("LAP;");
-		logFile->print(lapTimer.getLastLapTime());
-		logFile->print(";");
-		logFile->print(lapTimer.getLapNumber());
-		logFile->println("");
-		logFile->close();
+	if(!logFile->isOpen()) {
+		char lofFileName[20];
+		sprintf(lofFileName, this->logFileDirName);
+		strcat (lofFileName, "/syslog.log");
+		if(!logFile->open(lofFileName, O_WRITE | O_CREAT | O_APPEND)) {
+			Serial.println("File syslog.log open ERROR");
+			return;
+		}
 	}
+	logFile->print("LAP;");
+	logFile->print(lapTimer.getLastLapTime());
+	logFile->print(";");
+	logFile->print(lapTimer.getLapNumber());
+	logFile->println("");
+	logFile->sync();
+	//logFile->close();
 }
 
 void Chrono::logNmeaToSdCard(char* nmea) {
-	if (!logFile->open("nmea.log", O_WRITE | O_CREAT | O_APPEND)) {
-		Serial.println("File nmea.log open ERROR");
-	} else {
-		logFile->print(nmea);
-		logFile->close();
+	if(!logNmeaFile->isOpen()) {
+		char lofFileName[20];
+		sprintf(lofFileName, this->logFileDirName);
+		strcat (lofFileName, "/nmea.log");
+		if(!logNmeaFile->open(lofFileName, O_WRITE | O_CREAT | O_APPEND)) {
+			Serial.println("File nmea.log open ERROR");
+			return;
+		}
 	}
+	logFile->print(nmea);
+	logFile->sync();
 }
 
 void Chrono::handleUserOperation(int operation) {
@@ -368,11 +454,11 @@ void Chrono::loadTrack(bool nextTrack) {
 
 		JsonObject& tracciato = trackArray[newTrackIndex];
 
-		#if DEBUG_LOG
+
 			Serial.print("Selected track: ");
 			tracciato.printTo(Serial);
 			Serial.println("");
-		#endif
+
 
 		String nome = tracciato["name"].asString();
 
@@ -380,11 +466,32 @@ void Chrono::loadTrack(bool nextTrack) {
 		nome.toCharArray(temp, nome.length() + 1);
 		track->trackName = temp;
 
-		track->finishLinePoint1->latitude = tracciato["finishLine"][0]["lat"].as<float>();
-		track->finishLinePoint1->longitude = tracciato["finishLine"][0]["lon"].as<float>();
+		JsonArray& finishLineArray = tracciato["finishLine"];
+		JsonObject& finishLine1 = finishLineArray[0];
+		JsonObject& finishLine2 = finishLineArray[1];
 
-		track->finishLinePoint2->latitude = tracciato["finishLine"][1]["lat"].as<float>();
-		track->finishLinePoint2->longitude = tracciato["finishLine"][1]["lon"].as<float>();
+		Serial.print("FinishLineArray: ");
+		finishLineArray.printTo(Serial);
+		Serial.println("");
+
+		Serial.print("FinishLine1: ");
+		finishLine1.printTo(Serial);
+		Serial.println("");
+
+		Serial.print("FinishLine2: ");
+		finishLine2.printTo(Serial);
+		Serial.println("");
+
+		track->finishLinePoint1->latitude = finishLine1["lat"].as<float>();
+		track->finishLinePoint1->longitude = finishLine1["lon"].as<float>();
+
+		track->finishLinePoint2->latitude = finishLine2["lat"].as<float>();
+		track->finishLinePoint2->longitude = finishLine2["lon"].as<float>();
+
+		Serial.print("track 1 LAT= "); Serial.print(track->finishLinePoint1->latitude, 6);
+		Serial.print("track 1 LON= "); Serial.print(track->finishLinePoint1->longitude, 6);
+		Serial.print("track 2 LAT= "); Serial.print(track->finishLinePoint2->latitude, 6);
+		Serial.print("track 2 LON= "); Serial.print(track->finishLinePoint2->longitude, 6);
 
 		chronoGui.updateTrackName(track->trackName);
 	}

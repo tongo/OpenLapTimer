@@ -24,7 +24,7 @@ public:
 	Chrono(ILI9341_due* lcdTft, Adafruit_GPS* gpsSensor, HardwareSerial *gpsSerial);
 	virtual ~Chrono();
 	void loopChrono(void);
-	void setLogSdCard(bool useSdCard);
+	void setLogSdCard(SdFat* sd);
 	void setTouchScreen(TouchScreen* touchScreen);
 
 	// TEST
@@ -55,8 +55,11 @@ private:
 	GpsPoint lastPoint;
 	GpsPoint newPoint;
 
+	SdFat* sd;
 	bool useSdCard;
+	char* logFileDirName;
 	SdFile* logFile;
+	SdFile* logNmeaFile;
 
 	// TouchScreen
 	TouchScreenManager* touchScreenManager;
