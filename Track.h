@@ -8,7 +8,7 @@
 #ifndef TRACK_H_
 #define TRACK_H_
 
-#import "GpsPoint.h"
+#include "GpsPoint.h"
 
 class Track {
 public:

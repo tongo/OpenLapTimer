@@ -81,7 +81,8 @@ void loop(void) {
   Serial.print(average); Serial.print(" - "); Serial.println(loopLenghtMax);
   */
   // test button state
-  int currentTestButtonState = digitalRead(FINISH_LINE_BUTTON);
+  /*
+  int currentTestButtonState = LOW; //digitalRead(FINISH_LINE_BUTTON);
   //Serial.println(currentTestButtonState);
   
   // check if the pushbutton is pressed.
@@ -89,10 +90,9 @@ void loop(void) {
   if (currentTestButtonState == HIGH && prevTestButtonState == LOW) {
     Serial.print("ButtonTest Pressed");
     chrono->simulateNewLap = true;
-    Serial.print("loop: ");
-    //Serial.println(loopLenght);
   }
   prevTestButtonState = currentTestButtonState;
+  */
   
   chrono->loopChrono();
 }

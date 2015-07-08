@@ -3,6 +3,9 @@
  * Classe che modella il cronometro
  */
 
+#ifndef LAPTIMER_H_
+#define LAPTIMER_H_
+
 class LapTimer {
 	public:
 		LapTimer();
@@ -25,3 +28,5 @@ class LapTimer {
 		long previousLapTime;
 		long previousLapTimeDelay;
 };
+
+#endif /* LAPTIMER_H_ */

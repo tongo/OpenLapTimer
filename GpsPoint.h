@@ -1,3 +1,5 @@
+#ifndef GPSPOINT_H_
+#define GPSPOINT_H_
 
 #include <math.h>
 
@@ -15,3 +17,5 @@ public:
 private:
 	double convertDegMinToDecDeg(float deg);
 };
+
+#endif /* GPSPOINT_H_ */

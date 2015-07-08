@@ -10,13 +10,14 @@
 
 #define DEBUG_LOG_INTERSECTION false
 
-
-
 Track::Track() {
 	finishLinePoint1 = new GpsPoint(0, 0);
 	finishLinePoint2 = new GpsPoint(0, 0);
 
-	trackName = "none";
+	char textBuff[4];
+	sprintf(textBuff, "none");
+	trackName = textBuff;
+	
 	trackIndex = 0;
 }
 

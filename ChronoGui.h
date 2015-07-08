@@ -5,6 +5,9 @@
  *      Author: Tongo
  */
 
+#ifndef CHRONOGUI_H_
+#define CHRONOGUI_H_
+
 #include <ILI_SdSpi.h>
 #include <ILI_SdFatConfig.h>
 #include <ILI9341_due_gText.h>
@@ -32,3 +35,4 @@ private:
 	ILI9341_due_gText * lapDelayStateTextBox;
 };
 
+#endif /* CHRONOGUI_H_ */

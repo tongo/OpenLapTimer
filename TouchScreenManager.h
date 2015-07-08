@@ -1,3 +1,5 @@
+#ifndef TOUCHSCREENMANAGER_H_
+#define TOUCHSCREENMANAGER_H_
 
 #include <TouchScreen.h>
 
@@ -20,3 +22,5 @@ private:
 
 	int checkChronoOperation();
 };
+
+#endif /* TOUCHSCREENMANAGER_H_ */

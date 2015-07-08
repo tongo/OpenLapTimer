@@ -5,6 +5,9 @@
  *      Author: Tongo
  */
 
+#ifndef CHRONO_H_
+#define CHRONO_H_
+
 #include <ILI9341_due.h>
 #include <SdFat.h>
 #include <TouchScreen.h>
@@ -15,9 +18,6 @@
 #include "Track.h"
 #include "GpsPoint.h"
 #include "TouchScreenManager.h"
-
-#ifndef CHRONO_H_
-#define CHRONO_H_
 
 class Chrono {
 public:
